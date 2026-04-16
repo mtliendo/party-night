@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +9,17 @@ import type { Animal } from "@/lib/db";
 
 export default function WallClient({ animals: initialAnimals }: { animals: Animal[] }) {
   const [animals, setAnimals] = useState<Animal[]>(initialAnimals);
+  const [selected, setSelected] = useState<Animal | null>(null);
+
+  const closeModal = useCallback(() => setSelected(null), []);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!selected) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") closeModal(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [selected, closeModal]);
 
   useEffect(() => {
     const hasPending = animals.some((a) => !a.video_url);
@@ -92,7 +103,7 @@ export default function WallClient({ animals: initialAnimals }: { animals: Anima
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {animals.map((animal) => (
-              <AnimalCard key={animal.id} animal={animal} />
+              <AnimalCard key={animal.id} animal={animal} onClick={() => setSelected(animal)} />
             ))}
           </div>
         )}
@@ -106,13 +117,18 @@ export default function WallClient({ animals: initialAnimals }: { animals: Anima
         <span style={{ color: "var(--hot-pink)" }}>Auth0 Token Vault</span> ·{" "}
         <span style={{ color: "var(--neon-cyan)" }}>Grok AI</span>
       </footer>
+
+      {selected && <AnimalModal animal={selected} onClose={closeModal} />}
     </div>
   );
 }
 
-function AnimalCard({ animal }: { animal: Animal }) {
+function AnimalCard({ animal, onClick }: { animal: Animal; onClick: () => void }) {
   return (
-    <div className="card flex flex-col">
+    <div
+      className="card flex flex-col cursor-pointer group"
+      onClick={onClick}
+    >
       {/* Media */}
       <div
         className="relative w-full aspect-square overflow-hidden"
@@ -139,6 +155,19 @@ function AnimalCard({ animal }: { animal: Animal }) {
             <Skeleton className="w-full h-full" />
           </div>
         )}
+
+        {/* Hover overlay hint */}
+        <div
+          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ background: "rgba(0,0,0,0.45)" }}
+        >
+          <span
+            className="text-sm font-semibold tracking-widest uppercase"
+            style={{ color: "var(--neon-cyan)" }}
+          >
+            View
+          </span>
+        </div>
 
         {/* Status pill */}
         <div className="absolute top-3 right-3">
@@ -185,12 +214,11 @@ function AnimalCard({ animal }: { animal: Animal }) {
           href={`https://x.com/${animal.x_handle.replace("@", "")}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
           className="text-sm font-semibold hover:opacity-80 transition-opacity"
           style={{ color: "var(--hot-pink)" }}
         >
-          {animal.x_handle.startsWith("@")
-            ? animal.x_handle
-            : `@${animal.x_handle}`}
+          {animal.x_handle.startsWith("@") ? animal.x_handle : `@${animal.x_handle}`}
         </a>
         <span className="text-xs" style={{ color: "var(--text-muted)" }}>
           {new Date(animal.created_at).toLocaleDateString("en-US", {
@@ -198,6 +226,156 @@ function AnimalCard({ animal }: { animal: Animal }) {
             day: "numeric",
           })}
         </span>
+      </div>
+    </div>
+  );
+}
+
+function AnimalModal({ animal, onClose }: { animal: Animal; onClose: () => void }) {
+  const handle = animal.x_handle.startsWith("@") ? animal.x_handle : `@${animal.x_handle}`;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.85)" }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-3xl rounded-2xl overflow-hidden"
+        style={{
+          background: "var(--bg-card)",
+          border: "1px solid var(--border)",
+          boxShadow: "0 0 60px rgba(255,45,120,0.15), 0 0 120px rgba(0,0,0,0.6)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-6 py-4 border-b"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <div className="flex items-center gap-3">
+            <span
+              className="text-xl tracking-wide"
+              style={{ fontFamily: "var(--font-bangers)", color: "var(--hot-pink)" }}
+            >
+              {handle}
+            </span>
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+              {new Date(animal.created_at).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-xl leading-none hover:opacity-60 transition-opacity"
+            style={{ color: "var(--text-muted)" }}
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Media panels */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
+          {/* Original drawing */}
+          <div
+            className="flex flex-col"
+            style={{ borderRight: "1px solid var(--border)" }}
+          >
+            <div
+              className="text-center py-2 text-xs font-semibold tracking-widest uppercase"
+              style={{
+                color: "var(--neon-cyan)",
+                borderBottom: "1px solid var(--border)",
+                background: "rgba(0,240,255,0.04)",
+              }}
+            >
+              Original Drawing
+            </div>
+            <div
+              className="aspect-square flex items-center justify-center p-4"
+              style={{ background: "var(--bg-dark)" }}
+            >
+              {animal.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={animal.image_url}
+                  alt={`${handle}'s original drawing`}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <Skeleton className="w-full h-full" />
+              )}
+            </div>
+          </div>
+
+          {/* Animated video */}
+          <div className="flex flex-col">
+            <div
+              className="text-center py-2 text-xs font-semibold tracking-widest uppercase"
+              style={{
+                color: "var(--electric-purple)",
+                borderBottom: "1px solid var(--border)",
+                background: "rgba(176,38,255,0.04)",
+              }}
+            >
+              AI Animation
+            </div>
+            <div
+              className="aspect-square flex items-center justify-center"
+              style={{ background: "var(--bg-dark)" }}
+            >
+              {animal.video_url ? (
+                <video
+                  src={animal.video_url}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-3">
+                  <Skeleton className="w-24 h-24 rounded-full" />
+                  <span className="text-xs" style={{ color: "var(--gold)" }}>
+                    Generating animation…
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div
+          className="px-6 py-4 flex items-center justify-between border-t"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <a
+            href={`https://x.com/${animal.x_handle.replace("@", "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-semibold hover:opacity-80 transition-opacity"
+            style={{ color: "var(--hot-pink)" }}
+          >
+            View on X →
+          </a>
+          {animal.status === "posted" && (
+            <Badge
+              className="text-xs"
+              style={{
+                background: "rgba(0,240,255,0.15)",
+                border: "1px solid rgba(0,240,255,0.4)",
+                color: "var(--neon-cyan)",
+              }}
+            >
+              Posted to X
+            </Badge>
+          )}
+        </div>
       </div>
     </div>
   );

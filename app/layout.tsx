@@ -31,7 +31,7 @@ export default function RootLayout({
       lang="en"
       className={cn("h-full", inter.variable, bangers.variable, "font-sans", geist.variable)}
     >
-      <body className="h-dvh flex flex-col bg-[#08080f] text-[#f0f0f8] overflow-hidden">
+      <body className="min-h-dvh flex flex-col bg-[#08080f] text-[#f0f0f8]">
         {children}
       </body>
     </html>
