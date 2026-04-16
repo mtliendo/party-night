@@ -1,0 +1,224 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import type { Animal } from "@/lib/db";
+
+export default function WallClient({ animals: initialAnimals }: { animals: Animal[] }) {
+  const [animals, setAnimals] = useState<Animal[]>(initialAnimals);
+
+  useEffect(() => {
+    const hasPending = animals.some((a) => !a.video_url);
+    if (!hasPending) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/animals");
+        if (!res.ok) return;
+        const fresh: Animal[] = await res.json();
+        setAnimals(fresh);
+        const stillPending = fresh.some((a) => !a.video_url);
+        if (!stillPending) clearInterval(interval);
+      } catch {
+        // silently ignore transient fetch errors
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [animals]);
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg-dark)" }}>
+      {/* Nav */}
+      <nav
+        className="flex items-center justify-between px-6 py-4 border-b"
+        style={{ borderColor: "var(--border)" }}
+      >
+        <Link
+          href="/"
+          className="text-2xl tracking-wider hover:opacity-80 transition-opacity"
+          style={{ fontFamily: "var(--font-bangers)", color: "var(--hot-pink)" }}
+        >
+          PARTY ANIMALS
+        </Link>
+        <div className="flex items-center gap-4">
+          <span
+            className="text-sm font-semibold tracking-widest uppercase"
+            style={{ color: "var(--neon-cyan)" }}
+          >
+            The Wall
+          </span>
+          <Link href="/draw" className="btn-primary text-sm py-2 px-5">
+            Draw Yours
+          </Link>
+        </div>
+      </nav>
+
+      <main className="flex-1 px-6 py-12 max-w-7xl mx-auto w-full">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1
+            className="text-6xl sm:text-7xl mb-4 tracking-wide"
+            style={{ fontFamily: "var(--font-bangers)" }}
+          >
+            <span className="gradient-text glow-pink">THE WALL</span>
+          </h1>
+          <p style={{ color: "var(--text-muted)" }}>
+            Every animal, immortalized forever.
+          </p>
+          <Separator className="mt-8 opacity-20" />
+        </div>
+
+        {/* Count badge */}
+        <div className="flex items-center justify-between mb-8">
+          <Badge
+            className="text-sm px-4 py-1.5"
+            style={{
+              background: "rgba(255,45,120,0.12)",
+              border: "1px solid rgba(255,45,120,0.3)",
+              color: "var(--hot-pink)",
+            }}
+          >
+            {animals.length} {animals.length === 1 ? "animal" : "animals"} on the wall
+          </Badge>
+        </div>
+
+        {/* Grid */}
+        {animals.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {animals.map((animal) => (
+              <AnimalCard key={animal.id} animal={animal} />
+            ))}
+          </div>
+        )}
+      </main>
+
+      <footer
+        className="text-center py-8 text-xs border-t"
+        style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}
+      >
+        Powered by{" "}
+        <span style={{ color: "var(--hot-pink)" }}>Auth0 Token Vault</span> ·{" "}
+        <span style={{ color: "var(--neon-cyan)" }}>Grok AI</span>
+      </footer>
+    </div>
+  );
+}
+
+function AnimalCard({ animal }: { animal: Animal }) {
+  return (
+    <div className="card flex flex-col">
+      {/* Media */}
+      <div
+        className="relative w-full aspect-square overflow-hidden"
+        style={{ background: "var(--bg-card-hover)" }}
+      >
+        {animal.video_url ? (
+          <video
+            src={animal.video_url}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          />
+        ) : animal.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={animal.image_url}
+            alt={`${animal.x_handle}'s party animal`}
+            className="w-full h-full object-contain p-4"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Skeleton className="w-full h-full" />
+          </div>
+        )}
+
+        {/* Status pill */}
+        <div className="absolute top-3 right-3">
+          {animal.status === "posted" ? (
+            <Badge
+              className="text-xs"
+              style={{
+                background: "rgba(0,240,255,0.15)",
+                border: "1px solid rgba(0,240,255,0.4)",
+                color: "var(--neon-cyan)",
+              }}
+            >
+              Posted to X
+            </Badge>
+          ) : animal.video_url ? (
+            <Badge
+              className="text-xs"
+              style={{
+                background: "rgba(176,38,255,0.15)",
+                border: "1px solid rgba(176,38,255,0.4)",
+                color: "var(--electric-purple)",
+              }}
+            >
+              Animated
+            </Badge>
+          ) : (
+            <Badge
+              className="text-xs"
+              style={{
+                background: "rgba(255,215,0,0.15)",
+                border: "1px solid rgba(255,215,0,0.4)",
+                color: "var(--gold)",
+              }}
+            >
+              Processing
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="p-4 flex items-center justify-between">
+        <a
+          href={`https://x.com/${animal.x_handle.replace("@", "")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm font-semibold hover:opacity-80 transition-opacity"
+          style={{ color: "var(--hot-pink)" }}
+        >
+          {animal.x_handle.startsWith("@")
+            ? animal.x_handle
+            : `@${animal.x_handle}`}
+        </a>
+        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+          {new Date(animal.created_at).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          })}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-32 text-center gap-6">
+      <div className="text-8xl">🐾</div>
+      <h2
+        className="text-4xl tracking-wide"
+        style={{ fontFamily: "var(--font-bangers)", color: "var(--text-muted)" }}
+      >
+        The wall is empty
+      </h2>
+      <p style={{ color: "var(--text-muted)" }}>
+        Be the first to unleash your party animal.
+      </p>
+      <Link href="/draw" className="btn-primary">
+        Draw Your Animal 🎨
+      </Link>
+    </div>
+  );
+}

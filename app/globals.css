@@ -5,6 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Miami / GTA6 brand tokens */
   --hot-pink: #ff2d78;
   --neon-cyan: #00f0ff;
   --electric-purple: #b026ff;
@@ -14,38 +15,40 @@
   --bg-card-hover: #1a1a2e;
   --text-primary: #f0f0f8;
   --text-muted: #8888aa;
-  --border: oklch(0.922 0 0);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  /* shadcn semantic tokens — permanently dark Miami palette */
+  --background: #08080f;
+  --foreground: #f0f0f8;
+  --card: #12121e;
+  --card-foreground: #f0f0f8;
+  --popover: #12121e;
+  --popover-foreground: #f0f0f8;
+  --primary: #ff2d78;
+  --primary-foreground: #ffffff;
+  --secondary: #1a1a2e;
+  --secondary-foreground: #f0f0f8;
+  --muted: #1a1a2e;
+  --muted-foreground: #8888aa;
+  --accent: #b026ff;
+  --accent-foreground: #ffffff;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #ff2d78;
+  --chart-1: #ff2d78;
+  --chart-2: #00f0ff;
+  --chart-3: #b026ff;
+  --chart-4: #ffd700;
+  --chart-5: #ff8c42;
+  --radius: 0.75rem;
+  --sidebar: #12121e;
+  --sidebar-foreground: #f0f0f8;
+  --sidebar-primary: #ff2d78;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1a1a2e;
+  --sidebar-accent-foreground: #f0f0f8;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #ff2d78;
 }
 
 @theme inline {
@@ -198,6 +201,25 @@ body {
   opacity: 0.6;
 }
 
+/* Excalidraw compatibility — Tailwind v4 preflight sets svg{display:block} which
+   breaks Excalidraw's toolbar icon sizing. Revert inside the Excalidraw root. */
+.excalidraw svg {
+  display: revert;
+  vertical-align: revert;
+  max-width: revert;
+}
+.excalidraw img {
+  display: revert;
+  max-width: revert;
+}
+/* Prevent shadcn @layer base outline/border reset from leaking into Excalidraw */
+.excalidraw *,
+.excalidraw *::before,
+.excalidraw *::after {
+  outline: revert;
+  border-width: revert;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -210,39 +232,6 @@ body {
   border-radius: 3px;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
 
 @layer base {
   * {

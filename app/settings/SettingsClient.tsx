@@ -1,0 +1,195 @@
+"use client";
+
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+
+type User = {
+  email?: string;
+  name?: string;
+  picture?: string;
+  [key: string]: unknown;
+};
+
+export default function SettingsClient({
+  user,
+  xConnected,
+}: {
+  user: User;
+  xConnected: boolean;
+}) {
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg-dark)" }}>
+      {/* Nav */}
+      <nav
+        className="flex items-center justify-between px-6 py-4 border-b"
+        style={{ borderColor: "var(--border)" }}
+      >
+        <Link
+          href="/"
+          className="text-2xl tracking-wider hover:opacity-80 transition-opacity"
+          style={{ fontFamily: "var(--font-bangers)", color: "var(--hot-pink)" }}
+        >
+          PARTY ANIMALS
+        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/draw" className="btn-secondary text-sm py-2 px-5">
+            Draw
+          </Link>
+          <Link href="/wall" className="text-sm hover:text-white transition-colors" style={{ color: "var(--text-muted)" }}>
+            The Wall
+          </Link>
+          <Link href="/auth/logout" className="text-sm hover:text-white transition-colors" style={{ color: "var(--text-muted)" }}>
+            Logout
+          </Link>
+        </div>
+      </nav>
+
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
+        <div className="w-full max-w-xl flex flex-col gap-6">
+          <div className="text-center mb-4">
+            <h1
+              className="text-5xl tracking-wide mb-2"
+              style={{ fontFamily: "var(--font-bangers)" }}
+            >
+              <span className="gradient-text">SETTINGS</span>
+            </h1>
+            <p style={{ color: "var(--text-muted)" }}>
+              Connect your X account so @PartyAnimalBot can tag you.
+            </p>
+          </div>
+
+          {/* Profile card */}
+          <Card style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
+            <CardHeader>
+              <CardTitle
+                className="text-lg tracking-wide"
+                style={{ fontFamily: "var(--font-bangers)", color: "var(--text-primary)" }}
+              >
+                YOUR PROFILE
+              </CardTitle>
+              <CardDescription style={{ color: "var(--text-muted)" }}>
+                Logged in as
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center gap-4">
+              {user.picture && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.picture as string}
+                  alt={user.name as string}
+                  className="rounded-full size-12 border-2"
+                  style={{ borderColor: "var(--hot-pink)" }}
+                />
+              )}
+              <div>
+                <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                  {user.name}
+                </p>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  {user.email}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Separator className="opacity-20" />
+
+          {/* X connection card */}
+          <Card style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle
+                  className="text-lg tracking-wide flex items-center gap-2"
+                  style={{ fontFamily: "var(--font-bangers)", color: "var(--text-primary)" }}
+                >
+                  𝕏 ACCOUNT
+                </CardTitle>
+                {xConnected ? (
+                  <Badge
+                    style={{
+                      background: "rgba(0,240,255,0.12)",
+                      border: "1px solid rgba(0,240,255,0.3)",
+                      color: "var(--neon-cyan)",
+                    }}
+                  >
+                    Connected
+                  </Badge>
+                ) : (
+                  <Badge
+                    style={{
+                      background: "rgba(255,215,0,0.12)",
+                      border: "1px solid rgba(255,215,0,0.3)",
+                      color: "var(--gold)",
+                    }}
+                  >
+                    Not connected
+                  </Badge>
+                )}
+              </div>
+              <CardDescription style={{ color: "var(--text-muted)" }}>
+                {xConnected
+                  ? "Your X account is connected. @PartyAnimalBot will tag you when your animal is posted."
+                  : "Connect your X account so @PartyAnimalBot can tag you in the post."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {xConnected ? (
+                <div
+                  className="rounded-lg p-4 text-sm"
+                  style={{
+                    background: "rgba(0,240,255,0.05)",
+                    border: "1px solid rgba(0,240,255,0.15)",
+                    color: "var(--neon-cyan)",
+                  }}
+                >
+                  X credentials are securely stored in Auth0 Token Vault.
+                  @PartyAnimalBot will use them to tag you — you never share
+                  passwords.
+                </div>
+              ) : (
+                <a
+                  href="/auth/connect?connection=twitter&returnTo=/settings"
+                  className="btn-primary w-full justify-center"
+                >
+                  Connect X Account
+                </a>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Token Vault info */}
+          <Card style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
+            <CardHeader>
+              <CardTitle
+                className="text-lg tracking-wide"
+                style={{ fontFamily: "var(--font-bangers)", color: "var(--electric-purple)" }}
+              >
+                HOW IT WORKS
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3 text-sm" style={{ color: "var(--text-muted)" }}>
+              {[
+                { icon: "🔐", text: "Your X token is stored once in Auth0 Token Vault — never in our database." },
+                { icon: "🤖", text: "@PartyAnimalBot retrieves it at post time to tag you natively on X." },
+                { icon: "✋", text: "Human-in-the-loop: the bot only posts after the admin reviews your animal." },
+              ].map(({ icon, text }) => (
+                <div key={text} className="flex items-start gap-3">
+                  <span className="text-lg">{icon}</span>
+                  <span>{text}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+}

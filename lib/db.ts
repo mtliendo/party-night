@@ -7,7 +7,7 @@ export type Animal = {
   x_handle: string
   image_url: string | null
   video_url: string | null
-  status: 'pending' | 'posted'
+  status: 'pending' | 'approved' | 'posted'
   tweet_id: string | null
   created_at: string
 }
