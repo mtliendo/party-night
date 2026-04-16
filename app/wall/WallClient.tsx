@@ -12,6 +12,12 @@ export default function WallClient({ animals: initialAnimals }: { animals: Anima
   const [selected, setSelected] = useState<Animal | null>(null);
 
   const closeModal = useCallback(() => setSelected(null), []);
+  const updateAnimal = useCallback((updated: Animal) => {
+    setAnimals((current) =>
+      current.map((animal) => (animal.id === updated.id ? updated : animal))
+    );
+    setSelected((current) => (current?.id === updated.id ? updated : current));
+  }, []);
 
   // Close on Escape key
   useEffect(() => {
@@ -22,7 +28,7 @@ export default function WallClient({ animals: initialAnimals }: { animals: Anima
   }, [selected, closeModal]);
 
   useEffect(() => {
-    const hasPending = animals.some((a) => !a.video_url);
+    const hasPending = animals.some((a) => !a.video_url || a.status !== "posted");
     if (!hasPending) return;
 
     const interval = setInterval(async () => {
@@ -31,7 +37,7 @@ export default function WallClient({ animals: initialAnimals }: { animals: Anima
         if (!res.ok) return;
         const fresh: Animal[] = await res.json();
         setAnimals(fresh);
-        const stillPending = fresh.some((a) => !a.video_url);
+        const stillPending = fresh.some((a) => !a.video_url || a.status !== "posted");
         if (!stillPending) clearInterval(interval);
       } catch {
         // silently ignore transient fetch errors
@@ -118,7 +124,9 @@ export default function WallClient({ animals: initialAnimals }: { animals: Anima
         <span style={{ color: "var(--neon-cyan)" }}>Grok AI</span>
       </footer>
 
-      {selected && <AnimalModal animal={selected} onClose={closeModal} />}
+      {selected && (
+        <AnimalModal animal={selected} onClose={closeModal} onAnimalUpdated={updateAnimal} />
+      )}
     </div>
   );
 }
@@ -231,8 +239,47 @@ function AnimalCard({ animal, onClick }: { animal: Animal; onClick: () => void }
   );
 }
 
-function AnimalModal({ animal, onClose }: { animal: Animal; onClose: () => void }) {
+function AnimalModal({
+  animal,
+  onClose,
+  onAnimalUpdated,
+}: {
+  animal: Animal;
+  onClose: () => void;
+  onAnimalUpdated: (animal: Animal) => void;
+}) {
   const handle = animal.x_handle.startsWith("@") ? animal.x_handle : `@${animal.x_handle}`;
+  const tweetUrl = animal.tweet_id ? `https://x.com/i/web/status/${animal.tweet_id}` : null;
+  const [postState, setPostState] = useState<
+    { type: "idle" } | { type: "posting" } | { type: "success" } | { type: "error"; message: string }
+  >({ type: "idle" });
+
+  async function handlePostToX() {
+    setPostState({ type: "posting" });
+
+    try {
+      const res = await fetch(`/api/animals/${animal.id}/post-to-x`, {
+        method: "POST",
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error ?? "Failed to post to X.");
+      }
+
+      onAnimalUpdated({
+        ...animal,
+        status: "posted",
+        tweet_id: data.tweetId ?? animal.tweet_id,
+      });
+      setPostState({ type: "success" });
+    } catch (err) {
+      setPostState({
+        type: "error",
+        message: err instanceof Error ? err.message : "Failed to post to X.",
+      });
+    }
+  }
 
   return (
     <div
@@ -354,27 +401,52 @@ function AnimalModal({ animal, onClose }: { animal: Animal; onClose: () => void 
           className="px-6 py-4 flex items-center justify-between border-t"
           style={{ borderColor: "var(--border)" }}
         >
-          <a
-            href={`https://x.com/${animal.x_handle.replace("@", "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-semibold hover:opacity-80 transition-opacity"
-            style={{ color: "var(--hot-pink)" }}
-          >
-            View on X →
-          </a>
-          {animal.status === "posted" && (
-            <Badge
-              className="text-xs"
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={handlePostToX}
+              disabled={!animal.video_url || postState.type === "posting"}
+              className="btn-primary text-sm px-5 py-2 border-0"
               style={{
-                background: "rgba(0,240,255,0.15)",
-                border: "1px solid rgba(0,240,255,0.4)",
-                color: "var(--neon-cyan)",
+                background:
+                  postState.type === "posting"
+                    ? "rgba(255,45,120,0.4)"
+                    : "linear-gradient(135deg, var(--hot-pink), var(--electric-purple))",
               }}
             >
-              Posted to X
-            </Badge>
-          )}
+              {postState.type === "posting"
+                ? "Posting..."
+                : animal.status === "posted"
+                  ? "Post to X Again"
+                  : "Post to X"}
+            </button>
+            {postState.type === "error" && (
+              <span className="text-xs" style={{ color: "var(--hot-pink)" }}>
+                {postState.message}
+              </span>
+            )}
+            {postState.type === "success" && (
+              <span className="text-xs" style={{ color: "var(--neon-cyan)" }}>
+                Posted to X.
+              </span>
+            )}
+            {tweetUrl && (
+              <a
+                href={tweetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold hover:opacity-80 transition-opacity"
+                style={{ color: "var(--neon-cyan)" }}
+              >
+                View post on X →
+              </a>
+            )}
+          </div>
+          <div
+            className="text-sm font-semibold"
+            style={{ color: animal.status === "posted" ? "var(--neon-cyan)" : "var(--text-muted)" }}
+          >
+            {animal.status === "posted" ? "Posted to X" : "Ready to share"}
+          </div>
         </div>
       </div>
     </div>

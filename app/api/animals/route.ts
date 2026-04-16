@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { createAnimal, getAllAnimals, updateAnimal } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
+import { auth0 } from "@/lib/auth0";
+import { postAnimalToX } from "@/lib/x-post";
 
 export async function GET() {
   try {
@@ -41,10 +43,23 @@ export async function POST(request: NextRequest) {
       image_url: imageBlob.url,
     });
 
-    // 3. Kick off video generation async (don't await — respond fast)
-    void generateAndSaveVideo(animal.id, imageBlob.url).catch((err) =>
-      console.error("[generateAndSaveVideo]", err)
-    );
+    // 3. Grab the bot's Twitter token while the session is active.
+    //    This is passed into the async job so it can post to X after the video is ready.
+    let twitterToken: string | null = null;
+    try {
+      const { token } = await auth0.getAccessTokenForConnection({ connection: "twitter" });
+      twitterToken = token;
+    } catch (err) {
+      console.warn("[POST /api/animals] Could not get Twitter token — X post skipped:", err);
+    }
+
+    // 4. Kick off video generation async (don't await — respond fast)
+    void generateAndSaveVideo(
+      animal.id,
+      imageBlob.url,
+      animal.x_handle,
+      twitterToken
+    ).catch((err) => console.error("[generateAndSaveVideo]", err));
 
     return NextResponse.json(animal, { status: 201 });
   } catch (err) {
@@ -53,7 +68,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function generateAndSaveVideo(animalId: string, imageUrl: string) {
+async function generateAndSaveVideo(
+  animalId: string,
+  imageUrl: string,
+  xHandle: string,
+  twitterToken: string | null
+) {
   const xaiBase = "https://api.x.ai/v1";
   const apiKey = process.env.XAI_API_KEY!;
 
@@ -137,6 +157,23 @@ async function generateAndSaveVideo(animalId: string, imageUrl: string) {
 
   // 6. Update DB record
   await updateAnimal(animalId, { video_url: stored.url, status: "approved" });
+
+  // 7. Post to X (includes original image + generated video)
+  if (!twitterToken) {
+    console.warn(
+      "[generateAndSaveVideo] Missing Twitter token — created video but skipped X posting:",
+      { animalId }
+    );
+    return;
+  }
+
+  try {
+    const tweetId = await postAnimalToX(twitterToken, stored.url, xHandle, imageUrl);
+    await updateAnimal(animalId, { status: "posted", tweet_id: tweetId });
+  } catch (err) {
+    console.error("[generateAndSaveVideo] postAnimalToX failed:", err);
+    // Keep status as "approved" so the wall shows the animation even if tweeting fails.
+  }
 }
 
 function sleep(ms: number) {
