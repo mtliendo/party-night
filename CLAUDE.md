@@ -87,7 +87,82 @@ When it comes to developing with NextJS, I have the following ways I like to dev
 - Instead of form actions and data being send directly to the server, I prefer my client components to simply send the data to an API route and have the data acted up there. That's to say, I like my pages to be server rendered, but in spirit, this is to act like a normal SPA with nextjs Api routes doing the data work.
 
 - For the drawing diagram, use the Excalidraw NPM package.
+- For agent work in my app, use the ai-sdk and the vercel ai gateway
+- for the llm model, use Grok. This will also be the model used for when images become videos. 
+
 
 - homepage: This page simply tells the user about the app. this is a public page.
 - settings page: This is where the user goes to connect their account to X so that it can be used as a connected account with auth0 token vault. This page is obviously protected.
-- main content page. This is where the user makes their drawing. they have to enter their X handle and have a button to post to the animal wall. remember that doing so will also send it to my X account using the X message I layed out above. The video on X will be an X original video, while the video on the animal wall will be rendered from Vercel Blob storage. 
+- main content page. This is where the user makes their drawing. they have to enter their X handle and have a button to post to the animal wall. remember that doing so will also send it to my X account using the X message I layed out above. The video on X will be an X original video, while the video on the animal wall will be rendered from Vercel Blob storage. this page is protected.
+
+- For turning the image into a video, use Grok imagine: xai/grok-imagine-video
+
+## Helpful Auth0 code samples
+
+Because the `enableConnectedAccounts` in the `lib/auth0.ts` file already mounts several routes automatically, I am able to connect to X using something similar to this code found in another project:
+
+```ts
+ <a
+                href="/auth/connect?connection=google-oauth2&returnTo=/settings"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                Connect Google Drive
+              </a>
+```
+
+Additionally, I was able to connect and make external calls using code like this:
+```ts
+import { auth0 } from '@/lib/auth0'
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    
+    const { token } = await auth0.getAccessTokenForConnection({
+      connection: 'google-oauth2'
+    })
+
+    // Fetch the actual file bytes from Google Drive
+    const res = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${id}?alt=media`,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    )
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      console.log('[v0] Google Drive file fetch failed:', res.status, errorText)
+      return NextResponse.json(
+        { error: 'Failed to fetch file from Google Drive' },
+        { status: res.status }
+      )
+    }
+    
+    console.log('[v0] Successfully fetched file, streaming response')
+
+    // Get the content type from the response
+    const contentType = res.headers.get('content-type') || 'image/jpeg'
+    
+    // Stream the file bytes through
+    const blob = await res.blob()
+    
+    return new NextResponse(blob, {
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=3600',
+      },
+    })
+  } catch (error) {
+    console.error('Google Drive file fetch error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch file from Google Drive' },
+      { status: 500 }
+    )
+  }
+}
+```
