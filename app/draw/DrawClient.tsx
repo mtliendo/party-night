@@ -89,7 +89,7 @@ export default function DrawClient() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden" style={{ background: "var(--bg-dark)" }}>
+    <div className="flex-1 flex flex-col overflow-hidden min-h-0" style={{ background: "var(--bg-dark)" }}>
       {/* Nav */}
       <nav
         className="flex items-center justify-between px-6 py-4 border-b shrink-0"
@@ -117,7 +117,7 @@ export default function DrawClient() {
 
       <main className="flex-1 flex overflow-hidden">
         {/* Canvas */}
-        <div className="flex-1">
+        <div className="flex-1 relative overflow-hidden">
           <ExcalidrawWrapper
             excalidrawAPI={onExcalidrawAPI}
           />

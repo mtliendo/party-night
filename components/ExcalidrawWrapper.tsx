@@ -12,10 +12,10 @@ interface Props {
 
 export function ExcalidrawWrapper({ excalidrawAPI }: Props) {
   return (
-    <div className="h-full w-full">
+    <div className="absolute inset-0">
       <Excalidraw
         excalidrawAPI={excalidrawAPI}
-        theme="dark"
+        theme="light"
         UIOptions={{
           canvasActions: {
             export: false,
