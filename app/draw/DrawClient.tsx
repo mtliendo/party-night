@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -254,55 +254,239 @@ function CanvasLoader() {
   );
 }
 
+const PIPELINE_STEPS = [
+  {
+    icon: "🎬",
+    label: "Animating with Grok AI",
+    detail: "Converting your drawing into a video",
+    color: "var(--hot-pink)",
+    durationMs: 3200,
+  },
+  {
+    icon: "🗄️",
+    label: "Saving to Neon Database",
+    detail: "Storing your animal on the wall",
+    color: "var(--electric-purple)",
+    durationMs: 1800,
+  },
+  {
+    icon: "🔐",
+    label: "Auth0 Token Vault",
+    detail: "Fetching short-lived bot credentials — securely",
+    color: "var(--neon-cyan)",
+    durationMs: 2400,
+  },
+  {
+    icon: "𝕏",
+    label: "Posting to X",
+    detail: `@PartyAnimalBot is tagging you now`,
+    color: "var(--gold)",
+    durationMs: 1600,
+  },
+];
+
 function SuccessScreen({ xHandle }: { xHandle: string }) {
+  const [activeStep, setActiveStep] = useState(0);
+  const [doneSteps, setDoneSteps] = useState<Set<number>>(new Set());
+  const [allDone, setAllDone] = useState(false);
+
+  useEffect(() => {
+    let current = 0;
+
+    function advance() {
+      if (current >= PIPELINE_STEPS.length) {
+        setAllDone(true);
+        return;
+      }
+      setActiveStep(current);
+      const duration = PIPELINE_STEPS[current].durationMs;
+      setTimeout(() => {
+        setDoneSteps((prev) => new Set([...prev, current]));
+        current += 1;
+        setTimeout(advance, 300);
+      }, duration);
+    }
+
+    advance();
+  }, []);
+
+  const progressPct = allDone
+    ? 100
+    : Math.round((doneSteps.size / PIPELINE_STEPS.length) * 100);
+
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center text-center px-6"
+      className="min-h-screen flex flex-col items-center justify-center text-center px-6 py-12"
       style={{ background: "var(--bg-dark)" }}
     >
-      <div className="max-w-lg flex flex-col items-center gap-6">
-        <div className="text-8xl animate-bounce">🎉</div>
-        <h1
-          className="text-6xl tracking-wide leading-none"
-          style={{ fontFamily: "var(--font-bangers)" }}
-        >
-          <span className="gradient-text glow-pink">ANIMAL</span>
-          <br />
-          <span style={{ color: "var(--neon-cyan)" }}>UNLEASHED!</span>
-        </h1>
-        <p className="text-lg" style={{ color: "var(--text-muted)" }}>
-          Your animal is being animated by Grok AI. Once it is ready, it will
-          hit the wall and{" "}
-          <span style={{ color: "var(--hot-pink)" }}>@PartyAnimalBot</span> will
-          tag <span style={{ color: "var(--neon-cyan)" }}>@{xHandle}</span> on X.
-        </p>
-        <div
-          className="w-full rounded-2xl p-5 text-left flex flex-col gap-3"
-          style={{
-            background: "rgba(255,215,0,0.06)",
-            border: "1px solid rgba(255,215,0,0.2)",
-          }}
-        >
-          <p
-            className="text-xs font-bold tracking-widest uppercase"
-            style={{ color: "var(--gold)" }}
+      <div className="max-w-xl w-full flex flex-col items-center gap-8">
+        {/* Header */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="text-7xl">{allDone ? "🎉" : "⚙️"}</div>
+          <h1
+            className="text-5xl tracking-wide leading-none"
+            style={{ fontFamily: "var(--font-bangers)" }}
           >
-            Collect your reward
-          </p>
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Head to the booth to claim your limited{" "}
-            <span style={{ color: "var(--gold)" }}>3D-printed NFC tag</span> —
-            X logo on the front, Auth0 on the back. Limited supply!
+            <span className="gradient-text glow-pink">ANIMAL</span>
+            <br />
+            <span style={{ color: "var(--neon-cyan)" }}>
+              {allDone ? "UNLEASHED!" : "IN THE WORKS…"}
+            </span>
+          </h1>
+          <p className="text-base" style={{ color: "var(--text-muted)" }}>
+            {allDone ? (
+              <>
+                <span style={{ color: "var(--hot-pink)" }}>@PartyAnimalBot</span> just tagged{" "}
+                <span style={{ color: "var(--neon-cyan)" }}>@{xHandle}</span> on X!
+              </>
+            ) : (
+              "Watch the full agent pipeline run in real-time."
+            )}
           </p>
         </div>
-        <div className="flex gap-4">
-          <Link href="/wall" className="btn-primary">
-            See The Wall 🐾
-          </Link>
-          <Link href="/draw" className="btn-secondary">
-            Draw Another
-          </Link>
+
+        {/* Overall progress bar */}
+        <div className="w-full flex flex-col gap-2">
+          <div className="flex justify-between text-xs" style={{ color: "var(--text-muted)" }}>
+            <span style={{ fontFamily: "var(--font-bangers)", letterSpacing: "0.05em" }}>
+              PIPELINE PROGRESS
+            </span>
+            <span>{progressPct}%</span>
+          </div>
+          <div
+            className="w-full h-2 rounded-full overflow-hidden"
+            style={{ background: "rgba(255,255,255,0.08)" }}
+          >
+            <div
+              className="h-full rounded-full transition-all duration-500 ease-out"
+              style={{
+                width: `${progressPct}%`,
+                background: "linear-gradient(90deg, var(--hot-pink), var(--electric-purple), var(--neon-cyan))",
+                boxShadow: "0 0 8px rgba(0,245,255,0.5)",
+              }}
+            />
+          </div>
         </div>
+
+        {/* Step list */}
+        <div className="w-full flex flex-col gap-3">
+          {PIPELINE_STEPS.map((step, i) => {
+            const isDone = doneSteps.has(i);
+            const isActive = activeStep === i && !isDone;
+            const isPending = !isDone && !isActive;
+
+            return (
+              <div
+                key={i}
+                className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all duration-500"
+                style={{
+                  background: isDone
+                    ? "rgba(255,255,255,0.04)"
+                    : isActive
+                    ? `rgba(${step.color === "var(--hot-pink)" ? "255,45,120" : step.color === "var(--electric-purple)" ? "176,38,255" : step.color === "var(--neon-cyan)" ? "0,245,255" : "255,215,0"},0.08)`
+                    : "rgba(255,255,255,0.02)",
+                  border: `1px solid ${
+                    isDone
+                      ? "rgba(255,255,255,0.08)"
+                      : isActive
+                      ? step.color
+                      : "rgba(255,255,255,0.06)"
+                  }`,
+                  opacity: isPending ? 0.4 : 1,
+                  boxShadow: isActive ? `0 0 16px -4px ${step.color}` : "none",
+                }}
+              >
+                {/* Icon / spinner / check */}
+                <div
+                  className="text-2xl w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{
+                    background: isDone
+                      ? "rgba(255,255,255,0.06)"
+                      : isActive
+                      ? `${step.color}22`
+                      : "transparent",
+                  }}
+                >
+                  {isDone ? (
+                    <span style={{ color: "var(--neon-cyan)", fontSize: "1.1rem" }}>✓</span>
+                  ) : isActive ? (
+                    <span className="animate-spin inline-block" style={{ fontSize: "1rem" }}>⟳</span>
+                  ) : (
+                    <span style={{ fontSize: "1.1rem" }}>{step.icon}</span>
+                  )}
+                </div>
+
+                {/* Text */}
+                <div className="flex-1 text-left">
+                  <p
+                    className="text-sm font-semibold"
+                    style={{
+                      color: isDone
+                        ? "var(--text-muted)"
+                        : isActive
+                        ? step.color
+                        : "var(--text-muted)",
+                    }}
+                  >
+                    {step.label}
+                    {step.label === "Auth0 Token Vault" && (
+                      <span
+                        className="ml-2 text-xs font-bold tracking-widest uppercase px-1.5 py-0.5 rounded"
+                        style={{
+                          background: "rgba(0,245,255,0.12)",
+                          color: "var(--neon-cyan)",
+                          border: "1px solid rgba(0,245,255,0.3)",
+                        }}
+                      >
+                        Auth0
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    {step.detail}
+                  </p>
+                </div>
+
+                {/* Status badge */}
+                <div className="shrink-0">
+                  {isDone ? (
+                    <span
+                      className="text-xs font-bold tracking-widest uppercase px-2 py-1 rounded-lg"
+                      style={{
+                        background: "rgba(0,245,255,0.1)",
+                        color: "var(--neon-cyan)",
+                      }}
+                    >
+                      Done
+                    </span>
+                  ) : isActive ? (
+                    <span
+                      className="text-xs font-bold tracking-widest uppercase px-2 py-1 rounded-lg"
+                      style={{
+                        background: `${step.color}22`,
+                        color: step.color,
+                      }}
+                    >
+                      Running
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* CTA — only show when done */}
+        {allDone && (
+          <div className="flex gap-4 pt-2">
+            <Link href="/wall" className="btn-primary">
+              See The Wall 🐾
+            </Link>
+            <Link href="/draw" className="btn-secondary">
+              Draw Another
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
