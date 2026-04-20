@@ -2,8 +2,6 @@ const UPLOAD_BASE = 'https://upload.twitter.com/1.1/media/upload.json'
 
 const TWEET_TEMPLATES = [
   (handle: string) =>
-    `🎉 Meet ${handle}'s party animal, brought to life by AI!\n\nCheck out all the animals on the wall 👇\n\n@auth0 @ReactMiami`,
-  (handle: string) =>
     `🐾 ${handle} just dropped their party animal and it's incredible! AI did that. 🤯\n\n@auth0 @ReactMiami`,
   (handle: string) =>
     `The AI-powered party animal by ${handle} has entered the chat 🦄✨\n\nPowered by Auth0 Token Vault + Grok\n\n@auth0 @ReactMiami`,
