@@ -22,5 +22,5 @@ export default async function SettingsPage() {
 
   const xConnected = await checkXConnected()
 
-  return <SettingsClient user={session.user} xConnected={xConnected} />
+  return <SettingsClient user={session.user} xConnected={xConnected} userId={session.user.sub as string} />
 }

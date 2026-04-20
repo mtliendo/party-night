@@ -292,22 +292,28 @@ function SuccessScreen({ xHandle }: { xHandle: string }) {
 
   useEffect(() => {
     let current = 0;
+    let cancelled = false;
 
     function advance() {
+      if (cancelled) return;
       if (current >= PIPELINE_STEPS.length) {
         setAllDone(true);
         return;
       }
       setActiveStep(current);
-      const duration = PIPELINE_STEPS[current].durationMs;
+      const step = current;
+      const duration = PIPELINE_STEPS[step].durationMs;
       setTimeout(() => {
-        setDoneSteps((prev) => new Set([...prev, current]));
+        if (cancelled) return;
+        setDoneSteps((prev) => new Set([...prev, step]));
         current += 1;
         setTimeout(advance, 300);
       }, duration);
     }
 
     advance();
+
+    return () => { cancelled = true; };
   }, []);
 
   const progressPct = allDone
