@@ -82,10 +82,10 @@ export default async function Home() {
             className='text-7xl sm:text-8xl md:text-9xl mb-6 leading-none tracking-wide'
             style={{ fontFamily: 'var(--font-bangers)' }}
           >
-            <span className='gradient-text glow-pink'>PARTY</span>
+            <span className='gradient-text glow-pink'>Auth0</span>
             <br />
             <span style={{ color: 'var(--neon-cyan)' }} className='glow-cyan'>
-              ANIMALS
+              PARTY ANIMALS
             </span>
           </h1>
 
