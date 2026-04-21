@@ -1,35 +1,35 @@
 const UPLOAD_BASE = 'https://upload.twitter.com/1.1/media/upload.json'
 
 const TWEET_TEMPLATES = [
-  (handle: string) =>
-    `🐾 ${handle} just dropped their party animal and it's incredible! AI did that. 🤯\n\n@auth0 @ReactMiami`,
-  (handle: string) =>
-    `The AI-powered party animal by ${handle} has entered the chat 🦄✨\n\nPowered by Auth0 Token Vault + Grok\n\n@auth0 @ReactMiami`,
-  (handle: string) =>
-    `We asked AI to bring ${handle}'s drawing to life and honestly? No notes. 🎨🔥\n\n@auth0 @ReactMiami`,
-  (handle: string) =>
-    `${handle}'s party animal is here and it's ready to PARTY 🥳🐉\n\nAI-generated live at React Miami!\n\n@auth0 @ReactMiami`,
-  (handle: string) =>
-    `Look what ${handle} created at the React Miami booth 👀\n\nDrawing → AI video in seconds, secured by Auth0 Token Vault 🔐\n\n@auth0 @ReactMiami`,
-  (handle: string) =>
-    `Big things happening at React Miami 🌴 ${handle} just unleashed their AI party animal into the wild 🐆\n\n@auth0 @ReactMiami`,
-  (handle: string) =>
-    `${handle} drew this. Grok animated it. Auth0 posted it. No humans were harmed 🤖🎉\n\n@auth0 @ReactMiami`,
-  (handle: string) =>
-    `Behold ${handle}'s party animal — hand-drawn, AI-animated, and ready to crash the feed 🎊\n\n@auth0 @ReactMiami`,
-  (handle: string) =>
-    `React Miami is wild 🌴 ${handle}'s party animal just went live thanks to AI + Auth0 Token Vault 🔑\n\n@auth0 @ReactMiami`,
+  (handle: string, videoUrl: string, imageUrl: string) =>
+    `AI Demo: 🐾 ${handle} just dropped their party animal and it's incredible! AI did that. 🤯\n\n🖼️ ${imageUrl}\n🎬 ${videoUrl}`,
+  (handle: string, videoUrl: string, imageUrl: string) =>
+    `AI Demo: The AI-powered party animal by ${handle} has entered the chat 🦄✨\n\nPowered by Auth0 Token Vault + Grok\n\n🖼️ ${imageUrl}\n🎬 ${videoUrl}`,
+  (handle: string, videoUrl: string, imageUrl: string) =>
+    `AI Demo: We asked AI to bring ${handle}'s drawing to life and honestly? No notes. 🎨🔥\n\n🖼️ ${imageUrl}\n🎬 ${videoUrl}`,
+  (handle: string, videoUrl: string, imageUrl: string) =>
+    `AI Demo: ${handle}'s party animal is here and it's ready to PARTY 🥳🐉\n\nAI-generated live at React Miami!\n\n🖼️ ${imageUrl}\n🎬 ${videoUrl}`,
+  (handle: string, videoUrl: string, imageUrl: string) =>
+    `AI Demo: Look what ${handle} created at the React Miami booth 👀\n\nDrawing → AI video in seconds, secured by Auth0 Token Vault 🔐\n\n🖼️ ${imageUrl}\n🎬 ${videoUrl}`,
+  (handle: string, videoUrl: string, imageUrl: string) =>
+    `AI Demo: Big things happening at React Miami 🌴 ${handle} just unleashed their AI party animal into the wild 🐆\n\n🖼️ ${imageUrl}\n🎬 ${videoUrl}`,
+  (handle: string, videoUrl: string, imageUrl: string) =>
+    `AI Demo: ${handle} drew this. Grok animated it. Auth0 posted it. No humans were harmed 🤖🎉\n\n🖼️ ${imageUrl}\n🎬 ${videoUrl}`,
+  (handle: string, videoUrl: string, imageUrl: string) =>
+    `AI Demo: Behold ${handle}'s party animal — hand-drawn, AI-animated, and ready to crash the feed 🎊\n\n🖼️ ${imageUrl}\n🎬 ${videoUrl}`,
+  (handle: string, videoUrl: string, imageUrl: string) =>
+    `AI Demo: React Miami is wild 🌴 ${handle}'s party animal just went live thanks to AI + Auth0 Token Vault 🔑\n\n🖼️ ${imageUrl}\n🎬 ${videoUrl}`,
 ]
 
 export function buildTweetText(
   xHandle: string,
-  _imageUrl?: string,
-  _videoUrl?: string,
+  videoUrl: string,
+  imageUrl?: string,
 ) {
   const handle = xHandle.startsWith('@') ? xHandle : `@${xHandle}`
   const template =
     TWEET_TEMPLATES[Math.floor(Math.random() * TWEET_TEMPLATES.length)]
-  return template(handle)
+  return template(handle, videoUrl, imageUrl ?? '')
 }
 
 async function createTweet(
@@ -140,75 +140,25 @@ export async function uploadImageToX(
   token: string,
   imageUrl: string,
 ): Promise<string> {
-  // The app uploads the drawing as `drawing.png` (image/png), so we can safely initialize
-  // the media upload as a PNG.
   const imageRes = await fetch(imageUrl)
   if (!imageRes.ok) throw new Error('Failed to fetch image for upload')
   const imageBuffer = await imageRes.arrayBuffer()
-  const totalBytes = imageBuffer.byteLength
 
-  // INIT
-  const initParams = new URLSearchParams({
-    command: 'INIT',
-    total_bytes: totalBytes.toString(),
-    media_type: 'image/png',
-    media_category: 'tweet_image',
-  })
-  const initRes = await fetch(`${UPLOAD_BASE}?${initParams}`, {
+  const form = new FormData()
+  form.append('media', new Blob([imageBuffer], { type: 'image/png' }), 'image.png')
+
+  const uploadRes = await fetch(UPLOAD_BASE, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
+    body: form,
   })
-  if (!initRes.ok) {
-    throw new Error(`INIT failed: ${initRes.status} ${await initRes.text()}`)
-  }
-  const { media_id_string: mediaId } = await initRes.json()
-
-  // APPEND — chunks of 1 MB
-  const CHUNK_SIZE = 1024 * 1024
-  const bytes = new Uint8Array(imageBuffer)
-  let segmentIndex = 0
-
-  for (let offset = 0; offset < totalBytes; offset += CHUNK_SIZE) {
-    const chunk = bytes.slice(offset, offset + CHUNK_SIZE)
-    const appendForm = new FormData()
-    appendForm.append('command', 'APPEND')
-    appendForm.append('media_id', mediaId)
-    appendForm.append('segment_index', segmentIndex.toString())
-    appendForm.append('media', new Blob([chunk]), 'chunk.png')
-
-    const appendRes = await fetch(UPLOAD_BASE, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: appendForm,
-    })
-    if (!appendRes.ok) {
-      throw new Error(
-        `APPEND failed at segment ${segmentIndex}: ${appendRes.status}`,
-      )
-    }
-    segmentIndex++
+  if (!uploadRes.ok) {
+    const body = await uploadRes.text()
+    console.error('[uploadImageToX] 403 response body:', body)
+    throw new Error(`Image upload failed: ${uploadRes.status} ${body}`)
   }
 
-  // FINALIZE
-  const finalizeParams = new URLSearchParams({
-    command: 'FINALIZE',
-    media_id: mediaId,
-  })
-  const finalizeRes = await fetch(`${UPLOAD_BASE}?${finalizeParams}`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  if (!finalizeRes.ok) {
-    throw new Error(
-      `FINALIZE failed: ${finalizeRes.status} ${await finalizeRes.text()}`,
-    )
-  }
-
-  const finalizeData = await finalizeRes.json()
-  if (finalizeData.processing_info?.state === 'pending') {
-    await pollMediaProcessing(token, mediaId)
-  }
-
+  const { media_id_string: mediaId } = await uploadRes.json()
   return mediaId
 }
 
@@ -235,35 +185,21 @@ export async function postAnimalToX(
   xHandle: string,
   imageUrl?: string,
 ): Promise<string> {
-  const tweetText = buildTweetText(xHandle, imageUrl, videoUrl)
+  const tweetText = buildTweetText(xHandle, videoUrl, imageUrl)
 
-  // Upload both media up-front. If X rejects mixed media in a single tweet,
-  try {
-    // we retry with video-only using the already-uploaded video. If media upload itself
-    // is forbidden, we fall back to a text-only tweet so the bot still posts.
-    const videoMediaId = await uploadVideoToX(token, videoUrl)
-    const imageMediaId = imageUrl ? await uploadImageToX(token, imageUrl) : null
-    const mixedMediaIds = imageMediaId
-      ? [imageMediaId, videoMediaId]
-      : [videoMediaId]
-
+  // Embed the image as attached media; video URL is already in the tweet text.
+  // X does not allow mixing image + video media_ids in a single tweet.
+  let imageMediaId: string | null = null
+  if (imageUrl) {
     try {
-      return await createTweet(token, tweetText, mixedMediaIds)
+      imageMediaId = await uploadImageToX(token, imageUrl)
+      console.log('[postAnimalToX] Image uploaded, media_id:', imageMediaId)
     } catch (err) {
-      if (!imageMediaId) throw err
-      console.warn(
-        '[postAnimalToX] Mixed image+video tweet failed; retrying with video-only:',
-        err,
-      )
-      return await createTweet(token, tweetText, [videoMediaId])
+      console.error('[postAnimalToX] Image upload failed:', err)
     }
-  } catch (err) {
-    console.warn(
-      '[postAnimalToX] Media upload failed; falling back to text-only tweet:',
-      err,
-    )
-    return await createTweet(token, tweetText)
   }
+
+  return await createTweet(token, tweetText, imageMediaId ? [imageMediaId] : undefined)
 }
 
 function sleep(ms: number) {
