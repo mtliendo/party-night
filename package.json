@@ -15,6 +15,7 @@
     "@excalidraw/excalidraw": "^0.18.0",
     "@neondatabase/serverless": "^1.0.2",
     "@vercel/blob": "^2.3.3",
+    "@xdevplatform/xdk": "^0.5.0",
     "ai": "^6.0.164",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

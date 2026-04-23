@@ -26,6 +26,9 @@ importers:
       '@vercel/blob':
         specifier: ^2.3.3
         version: 2.3.3
+      '@xdevplatform/xdk':
+        specifier: ^0.5.0
+        version: 0.5.0(node-fetch@3.3.2)
       ai:
         specifier: ^6.0.164
         version: 6.0.164(zod@4.3.6)
@@ -1325,6 +1328,15 @@ packages:
   '@vercel/oidc@3.1.0':
     resolution: {integrity: sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==}
     engines: {node: '>= 20'}
+
+  '@xdevplatform/xdk@0.5.0':
+    resolution: {integrity: sha512-Ye3yAmJOhal7wqvq6z8iJgSxq4+ytQmPFMMkyg/cPcdoeebqHZBdwTmc3T78kTbUwQy8NoCFRjgTrC+n7lmPnA==}
+    engines: {node: '>=16.14'}
+    peerDependencies:
+      node-fetch: ^3.3.0
+    peerDependenciesMeta:
+      node-fetch:
+        optional: true
 
   accepts@2.0.0:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
@@ -5285,6 +5297,10 @@ snapshots:
       undici: 6.25.0
 
   '@vercel/oidc@3.1.0': {}
+
+  '@xdevplatform/xdk@0.5.0(node-fetch@3.3.2)':
+    optionalDependencies:
+      node-fetch: 3.3.2
 
   accepts@2.0.0:
     dependencies:
