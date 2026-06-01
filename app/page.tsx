@@ -74,7 +74,7 @@ export default async function Home() {
             }}
           >
             <span className='w-1.5 h-1.5 rounded-full bg-current animate-pulse' />
-            AI Engineer | React Miami 2026
+            CascadiaJS
           </div>
 
           {/* Headline */}
