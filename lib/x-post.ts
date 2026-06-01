@@ -8,17 +8,17 @@ const TWEET_TEMPLATES = [
   (handle: string, videoUrl: string) =>
     `AI Demo: We asked AI to bring ${handle}'s drawing to life and honestly? No notes. 🎨🔥\n\nPosted autonomously via Auth0 Token Vault — this is what agentic auth looks like.\n\n🎬 ${videoUrl}`,
   (handle: string, videoUrl: string) =>
-    `AI Demo: ${handle}'s party animal is here and it's ready to PARTY 🥳🐉\n\nAI-generated live at React Miami, posted by an agent using Auth0 Token Vault 🔐\n\n🎬 ${videoUrl}`,
+    `AI Demo: ${handle}'s party animal is here and it's ready to PARTY 🥳🐉\n\nAI-generated live at CascadiaJS, posted by an agent using Auth0 Token Vault 🔐\n\n🎬 ${videoUrl}`,
   (handle: string, videoUrl: string) =>
-    `AI Demo: Look what ${handle} created at the React Miami booth 👀\n\nDrawing → AI video in seconds. Auth0 Token Vault handled the rest — no hardcoded credentials, ever.\n\n🎬 ${videoUrl}`,
+    `AI Demo: Look what ${handle} created at the CascadiaJS booth 👀\n\nDrawing → AI video in seconds. Auth0 Token Vault handled the rest — no hardcoded credentials, ever.\n\n🎬 ${videoUrl}`,
   (handle: string, videoUrl: string) =>
-    `AI Demo: Big things happening at React Miami 🌴 ${handle} just unleashed their AI party animal 🐆\n\nThis post? Fully automated via Auth0 Token Vault. Agents with credentials, done right.\n\n🎬 ${videoUrl}`,
+    `AI Demo: Big things happening at CascadiaJS 🌲 ${handle} just unleashed their AI party animal 🐆\n\nThis post? Fully automated via Auth0 Token Vault. Agents with credentials, done right.\n\n🎬 ${videoUrl}`,
   (handle: string, videoUrl: string) =>
     `AI Demo: ${handle} drew this. Grok animated it. Auth0 Token Vault posted it. No humans were harmed 🤖🎉\n\n🎬 ${videoUrl}`,
   (handle: string, videoUrl: string) =>
     `AI Demo: Behold ${handle}'s party animal — hand-drawn, AI-animated, posted by an agent 🎊\n\nAuth0 Token Vault keeps bot credentials secure so agents can act on your behalf safely.\n\n🎬 ${videoUrl}`,
   (handle: string, videoUrl: string) =>
-    `AI Demo: React Miami is wild 🌴 ${handle}'s party animal just went live 🔑\n\nPowered by Grok + Auth0 Token Vault — the agent retrieved the token, posted the video, and never touched a hardcoded secret.\n\n🎬 ${videoUrl}`,
+    `AI Demo: CascadiaJS is wild 🌲 ${handle}'s party animal just went live 🔑\n\nPowered by Grok + Auth0 Token Vault — the agent retrieved the token, posted the video, and never touched a hardcoded secret.\n\n🎬 ${videoUrl}`,
 ]
 
 export function buildTweetText(xHandle: string, videoUrl: string) {
