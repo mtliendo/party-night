@@ -155,7 +155,7 @@ function AnimalCard({ animal, onClick }: { animal: Animal; onClick: () => void }
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={animal.image_url}
-            alt={`${animal.x_handle}'s party animal`}
+            alt={`${animal.github_handle}'s party animal`}
             className="w-full h-full object-contain p-4"
           />
         ) : (
@@ -188,7 +188,7 @@ function AnimalCard({ animal, onClick }: { animal: Animal; onClick: () => void }
                 color: "var(--neon-cyan)",
               }}
             >
-              Posted to X
+              Posted to GitHub
             </Badge>
           ) : animal.video_url ? (
             <Badge
@@ -219,14 +219,14 @@ function AnimalCard({ animal, onClick }: { animal: Animal; onClick: () => void }
       {/* Footer */}
       <div className="p-4 flex items-center justify-between">
         <a
-          href={`https://x.com/${animal.x_handle.replace("@", "")}`}
+          href={`https://github.com/${animal.github_handle.replace("@", "")}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           className="text-sm font-semibold hover:opacity-80 transition-opacity"
           style={{ color: "var(--hot-pink)" }}
         >
-          {animal.x_handle.startsWith("@") ? animal.x_handle : `@${animal.x_handle}`}
+          {animal.github_handle.startsWith("@") ? animal.github_handle : `@${animal.github_handle}`}
         </a>
         <span className="text-xs" style={{ color: "var(--text-muted)" }}>
           {new Date(animal.created_at).toLocaleDateString("en-US", {
@@ -248,35 +248,34 @@ function AnimalModal({
   onClose: () => void;
   onAnimalUpdated: (animal: Animal) => void;
 }) {
-  const handle = animal.x_handle.startsWith("@") ? animal.x_handle : `@${animal.x_handle}`;
-  const tweetUrl = animal.tweet_id ? `https://x.com/i/web/status/${animal.tweet_id}` : null;
+  const handle = animal.github_handle.startsWith("@") ? animal.github_handle : `@${animal.github_handle}`;
   const [postState, setPostState] = useState<
     { type: "idle" } | { type: "posting" } | { type: "success" } | { type: "error"; message: string }
   >({ type: "idle" });
 
-  async function handlePostToX() {
+  async function handlePostToGitHub() {
     setPostState({ type: "posting" });
 
     try {
-      const res = await fetch(`/api/animals/${animal.id}/post-to-x`, {
+      const res = await fetch(`/api/animals/${animal.id}/post-to-github`, {
         method: "POST",
       });
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to post to X.");
+        throw new Error(data.error ?? "Failed to post to GitHub.");
       }
 
       onAnimalUpdated({
         ...animal,
         status: "posted",
-        tweet_id: data.tweetId ?? animal.tweet_id,
+        issue_url: data.issueUrl ?? animal.issue_url,
       });
       setPostState({ type: "success" });
     } catch (err) {
       setPostState({
         type: "error",
-        message: err instanceof Error ? err.message : "Failed to post to X.",
+        message: err instanceof Error ? err.message : "Failed to post to GitHub.",
       });
     }
   }
@@ -403,7 +402,7 @@ function AnimalModal({
         >
           <div className="flex flex-col gap-2">
             <button
-              onClick={handlePostToX}
+              onClick={handlePostToGitHub}
               disabled={!animal.video_url || postState.type === "posting"}
               className="btn-primary text-sm px-5 py-2 border-0"
               style={{
@@ -416,8 +415,8 @@ function AnimalModal({
               {postState.type === "posting"
                 ? "Posting..."
                 : animal.status === "posted"
-                  ? "Post to X Again"
-                  : "Post to X"}
+                  ? "Post to GitHub Again"
+                  : "Post to GitHub"}
             </button>
             {postState.type === "error" && (
               <span className="text-xs" style={{ color: "var(--hot-pink)" }}>
@@ -426,18 +425,18 @@ function AnimalModal({
             )}
             {postState.type === "success" && (
               <span className="text-xs" style={{ color: "var(--neon-cyan)" }}>
-                Posted to X.
+                Posted to GitHub!
               </span>
             )}
-            {tweetUrl && (
+            {animal.issue_url && (
               <a
-                href={tweetUrl}
+                href={animal.issue_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs font-semibold hover:opacity-80 transition-opacity"
                 style={{ color: "var(--neon-cyan)" }}
               >
-                View post on X →
+                View issue on GitHub →
               </a>
             )}
           </div>
@@ -445,7 +444,7 @@ function AnimalModal({
             className="text-sm font-semibold"
             style={{ color: animal.status === "posted" ? "var(--neon-cyan)" : "var(--text-muted)" }}
           >
-            {animal.status === "posted" ? "Posted to X" : "Ready to share"}
+            {animal.status === "posted" ? "Posted to GitHub" : "Ready to share"}
           </div>
         </div>
       </div>

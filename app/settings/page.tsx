@@ -8,19 +8,18 @@ export default async function SettingsPage() {
     redirect('/auth/login?returnTo=/settings')
   }
 
-  async function checkXConnected() {
+  async function checkGitHubConnected() {
     try {
-      const { token } = await auth0.getAccessTokenForConnection({
-        connection: 'twitter',
+      await auth0.getAccessTokenForConnection({
+        connection: 'github',
       })
-      console.log(token)
       return true
     } catch {
       return false
     }
   }
 
-  const xConnected = await checkXConnected()
+  const githubConnected = await checkGitHubConnected()
 
-  return <SettingsClient user={session.user} xConnected={xConnected} userId={session.user.sub as string} />
+  return <SettingsClient user={session.user} githubConnected={githubConnected} userId={session.user.sub as string} />
 }

@@ -20,11 +20,11 @@ type User = {
 
 export default function SettingsClient({
   user,
-  xConnected,
+  githubConnected,
   userId,
 }: {
   user: User
-  xConnected: boolean
+  githubConnected: boolean
   userId: string
 }) {
   return (
@@ -78,7 +78,7 @@ export default function SettingsClient({
               <span className='gradient-text'>SETTINGS</span>
             </h1>
             <p style={{ color: 'var(--text-muted)' }}>
-              Connect your X account so @PartyAnimalBot can tag you.
+              Connect your GitHub account so your party animal gets posted to the gallery.
             </p>
           </div>
 
@@ -129,7 +129,7 @@ export default function SettingsClient({
 
           <Separator className='opacity-20' />
 
-          {/* X connection card */}
+          {/* GitHub connection card */}
           <Card
             style={{
               background: 'var(--bg-card)',
@@ -145,9 +145,9 @@ export default function SettingsClient({
                     color: 'var(--text-primary)',
                   }}
                 >
-                  𝕏 ACCOUNT
+                  GITHUB ACCOUNT
                 </CardTitle>
-                {xConnected ? (
+                {githubConnected ? (
                   <Badge
                     style={{
                       background: 'rgba(0,240,255,0.12)',
@@ -170,31 +170,39 @@ export default function SettingsClient({
                 )}
               </div>
               <CardDescription style={{ color: 'var(--text-muted)' }}>
-                {xConnected
-                  ? 'Your X account is connected. @PartyAnimalBot will tag you when your animal is posted.'
-                  : 'Connect your X account so @PartyAnimalBot can tag you in the post.'}
+                {githubConnected
+                  ? 'Your GitHub account is connected. Your party animal will be posted to the gallery as a GitHub issue.'
+                  : 'Connect your GitHub account to post your party animal to the gallery.'}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {xConnected ? (
-                <div
-                  className='rounded-lg p-4 text-sm'
-                  style={{
-                    background: 'rgba(0,240,255,0.05)',
-                    border: '1px solid rgba(0,240,255,0.15)',
-                    color: 'var(--neon-cyan)',
-                  }}
-                >
-                  X credentials are securely stored in Auth0 Token Vault.
-                  @PartyAnimalBot will use them to tag you — you never share
-                  passwords.
+              {githubConnected ? (
+                <div className='flex flex-col gap-3'>
+                  <div
+                    className='rounded-lg p-4 text-sm'
+                    style={{
+                      background: 'rgba(0,240,255,0.05)',
+                      border: '1px solid rgba(0,240,255,0.15)',
+                      color: 'var(--neon-cyan)',
+                    }}
+                  >
+                    GitHub credentials are securely stored in Auth0 Token Vault.
+                    Your party animal will be posted to the gallery — you never share
+                    passwords.
+                  </div>
+                  <a
+                    href='/auth/connect?connection=github&returnTo=/settings'
+                    className='btn-secondary w-full justify-center text-center'
+                  >
+                    Reconnect GitHub
+                  </a>
                 </div>
               ) : (
                 <a
-                  href='/auth/connect?connection=twitter&returnTo=/settings'
+                  href='/auth/connect?connection=github&returnTo=/settings'
                   className='btn-primary w-full justify-center'
                 >
-                  Connect X Account
+                  Connect GitHub Account
                 </a>
               )}
             </CardContent>
@@ -241,11 +249,11 @@ export default function SettingsClient({
               {[
                 {
                   icon: '🔐',
-                  text: 'Your X token is stored once in Auth0 Token Vault — never in our database.',
+                  text: 'Your GitHub token is stored once in Auth0 Token Vault — never in our database.',
                 },
                 {
                   icon: '🤖',
-                  text: '@PartyAnimalBot retrieves it at post time to tag you natively on X.',
+                  text: 'The agent retrieves it at post time to create a GitHub issue with your party animal.',
                 },
                 {
                   icon: '✋',

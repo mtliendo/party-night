@@ -74,7 +74,7 @@ export default async function Home() {
             }}
           >
             <span className='w-1.5 h-1.5 rounded-full bg-current animate-pulse' />
-            CascadiaJS
+            AI World Fair 2026
           </div>
 
           {/* Headline */}
@@ -94,9 +94,9 @@ export default async function Home() {
             style={{ color: 'var(--text-muted)' }}
           >
             Draw your wildest creature. AI animates it into a video. Your animal
-            joins the wall — and gets posted to{' '}
-            <span style={{ color: 'var(--hot-pink)' }}>@PartyAnimalBot</span> on
-            X. <br />
+            joins the wall — and gets posted to the{' '}
+            <span style={{ color: 'var(--hot-pink)' }}>GitHub gallery</span> by
+            an AI agent. <br />
             <span style={{ color: 'var(--gold)' }}>Auth0 Token Vault</span>{' '}
             helps finally say goodbye to long-lived credentials in your agents!
           </p>
@@ -149,7 +149,7 @@ export default async function Home() {
               step: '03',
               icon: '🐾',
               title: 'Hit the Wall',
-              desc: 'Your animal goes live on the wall and gets posted to X by @PartyAnimalBot.',
+              desc: 'Your animal goes live on the wall and gets posted to the GitHub gallery.',
               color: 'var(--neon-cyan)',
             },
           ].map(({ step, icon, title, desc, color }) => (

@@ -27,12 +27,12 @@ type SubmitState =
 export default function DrawClient() {
   const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null);
   const onExcalidrawAPI = useCallback((api: ExcalidrawImperativeAPI) => setExcalidrawAPI(api), []);
-  const [xHandle, setXHandle] = useState("");
+  const [githubHandle, setGithubHandle] = useState("");
   const [state, setState] = useState<SubmitState>({ type: "idle" });
 
   async function handleSubmit() {
-    if (!xHandle.trim()) {
-      setState({ type: "error", message: "Please enter your X handle." });
+    if (!githubHandle.trim()) {
+      setState({ type: "error", message: "Please enter your GitHub username." });
       return;
     }
 
@@ -63,7 +63,7 @@ export default function DrawClient() {
 
       const formData = new FormData();
       formData.append("image", blob, "animal.png");
-      formData.append("xHandle", xHandle.trim());
+      formData.append("githubHandle", githubHandle.trim());
 
       const res = await fetch("/api/animals", {
         method: "POST",
@@ -85,7 +85,7 @@ export default function DrawClient() {
   }
 
   if (state.type === "success") {
-    return <SuccessScreen xHandle={xHandle} />;
+    return <SuccessScreen githubHandle={githubHandle} />;
   }
 
   return (
@@ -138,16 +138,16 @@ export default function DrawClient() {
               <span style={{ color: "var(--neon-cyan)" }}>PARTY ANIMAL</span>
             </h1>
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              Sketch anything wild. AI animates it into a video that hits the wall — and X.
+              Sketch anything wild. AI animates it into a video that hits the wall — and GitHub.
             </p>
           </div>
 
           <Separator className="opacity-20" />
 
-          {/* X handle input */}
+          {/* GitHub handle input */}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="x-handle" className="text-sm font-semibold tracking-wide" style={{ color: "var(--text-primary)" }}>
-              Your X Handle
+            <Label htmlFor="github-handle" className="text-sm font-semibold tracking-wide" style={{ color: "var(--text-primary)" }}>
+              Your GitHub Username
             </Label>
             <div className="relative">
               <span
@@ -157,13 +157,13 @@ export default function DrawClient() {
                 @
               </span>
               <Input
-                id="x-handle"
-                value={xHandle}
+                id="github-handle"
+                value={githubHandle}
                 onChange={(e) => {
-                  setXHandle(e.target.value.replace(/^@/, ""));
+                  setGithubHandle(e.target.value.replace(/^@/, ""));
                   if (state.type === "error") setState({ type: "idle" });
                 }}
-                placeholder="yourhandle"
+                placeholder="yourusername"
                 className="pl-7"
                 style={{
                   background: "var(--bg-dark)",
@@ -174,7 +174,7 @@ export default function DrawClient() {
               />
             </div>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              @PartyAnimalBot will tag you when posted.
+              You&apos;ll be mentioned in the GitHub issue when your animal is posted.
             </p>
           </div>
 
@@ -272,20 +272,20 @@ const PIPELINE_STEPS = [
   {
     icon: "🔐",
     label: "Auth0 Token Vault",
-    detail: "Fetching short-lived bot credentials — securely",
+    detail: "Fetching short-lived GitHub credentials — securely",
     color: "var(--neon-cyan)",
     durationMs: 2400,
   },
   {
-    icon: "𝕏",
-    label: "Posting to X",
-    detail: `@PartyAnimalBot is tagging you now`,
+    icon: "🐙",
+    label: "Posting to GitHub",
+    detail: "Creating a gallery issue with your party animal",
     color: "var(--gold)",
     durationMs: 1600,
   },
 ];
 
-function SuccessScreen({ xHandle }: { xHandle: string }) {
+function SuccessScreen({ githubHandle }: { githubHandle: string }) {
   const [activeStep, setActiveStep] = useState(0);
   const [doneSteps, setDoneSteps] = useState<Set<number>>(new Set());
   const [allDone, setAllDone] = useState(false);
@@ -342,8 +342,7 @@ function SuccessScreen({ xHandle }: { xHandle: string }) {
           <p className="text-base" style={{ color: "var(--text-muted)" }}>
             {allDone ? (
               <>
-                <span style={{ color: "var(--hot-pink)" }}>@PartyAnimalBot</span> just tagged{" "}
-                <span style={{ color: "var(--neon-cyan)" }}>@{xHandle}</span> on X!
+                <span style={{ color: "var(--neon-cyan)" }}>@{githubHandle}</span>&apos;s party animal is now on the GitHub gallery!
               </>
             ) : (
               "Watch the full agent pipeline run in real-time."

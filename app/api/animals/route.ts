@@ -3,7 +3,7 @@ import { put } from '@vercel/blob'
 import { createAnimal, getAllAnimals, updateAnimal } from '@/lib/db'
 import { v4 as uuidv4 } from 'uuid'
 import { auth0 } from '@/lib/auth0'
-import { postAnimalToX } from '@/lib/x-post'
+import { createAnimalIssue } from '@/lib/github-post'
 
 export async function GET() {
   try {
@@ -22,11 +22,11 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const imageFile = formData.get('image') as File | null
-    const xHandle = formData.get('xHandle') as string | null
+    const githubHandle = formData.get('githubHandle') as string | null
 
-    if (!imageFile || !xHandle) {
+    if (!imageFile || !githubHandle) {
       return NextResponse.json(
-        { error: 'Missing image or xHandle' },
+        { error: 'Missing image or GitHub handle' },
         { status: 400 },
       )
     }
@@ -42,21 +42,20 @@ export async function POST(request: NextRequest) {
 
     // 2. Save initial record to DB
     const animal = await createAnimal({
-      x_handle: xHandle.startsWith('@') ? xHandle : `@${xHandle}`,
+      github_handle: githubHandle.startsWith('@') ? githubHandle : `@${githubHandle}`,
       image_url: imageBlob.url,
     })
 
-    // 3. Grab the bot's Twitter token while the session is active.
-    //    This is passed into the async job so it can post to X after the video is ready.
-    let twitterToken: string | null = null
+    // 3. Grab the GitHub token from Auth0 Token Vault while the session is active.
+    let githubToken: string | null = null
     try {
       const { token } = await auth0.getAccessTokenForConnection({
-        connection: 'twitter',
+        connection: 'github',
       })
-      twitterToken = token
+      githubToken = token
     } catch (err) {
       console.warn(
-        '[POST /api/animals] Could not get Twitter token — X post skipped:',
+        '[POST /api/animals] Could not get GitHub token — issue post skipped:',
         err,
       )
     }
@@ -65,8 +64,8 @@ export async function POST(request: NextRequest) {
     void generateAndSaveVideo(
       animal.id,
       imageBlob.url,
-      animal.x_handle,
-      twitterToken,
+      animal.github_handle,
+      githubToken,
     ).catch((err) => console.error('[generateAndSaveVideo]', err))
 
     return NextResponse.json(animal, { status: 201 })
@@ -79,8 +78,8 @@ export async function POST(request: NextRequest) {
 async function generateAndSaveVideo(
   animalId: string,
   imageUrl: string,
-  xHandle: string,
-  twitterToken: string | null,
+  githubHandle: string,
+  githubToken: string | null,
 ) {
   const xaiBase = 'https://api.x.ai/v1'
   const apiKey = process.env.XAI_API_KEY!
@@ -169,26 +168,25 @@ async function generateAndSaveVideo(
   // 6. Update DB record
   await updateAnimal(animalId, { video_url: stored.url, status: 'approved' })
 
-  // 7. Post to X (includes original image + generated video)
-  if (!twitterToken) {
+  // 7. Post to GitHub as an issue
+  if (!githubToken) {
     console.warn(
-      '[generateAndSaveVideo] Missing Twitter token — created video but skipped X posting:',
+      '[generateAndSaveVideo] Missing GitHub token — created video but skipped GitHub posting:',
       { animalId },
     )
     return
   }
 
   try {
-    const tweetId = await postAnimalToX(
-      twitterToken,
-      stored.url,
-      xHandle,
+    const issue = await createAnimalIssue({
+      token: githubToken,
+      githubHandle,
       imageUrl,
-    )
-    await updateAnimal(animalId, { status: 'posted', tweet_id: tweetId })
+      videoUrl: stored.url,
+    })
+    await updateAnimal(animalId, { status: 'posted', issue_url: issue.url })
   } catch (err) {
-    console.error('[generateAndSaveVideo] postAnimalToX failed:', err)
-    // Keep status as "approved" so the wall shows the animation even if tweeting fails.
+    console.error('[generateAndSaveVideo] createAnimalIssue failed:', err)
   }
 }
 

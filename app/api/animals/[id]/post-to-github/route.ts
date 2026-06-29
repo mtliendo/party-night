@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth0";
 import { getAnimalById, updateAnimal } from "@/lib/db";
-import { postAnimalToX } from "@/lib/x-post";
+import { createAnimalIssue } from "@/lib/github-post";
 
 export async function POST(
   request: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Must be logged in
     const session = await auth0.getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -27,24 +26,22 @@ export async function POST(
       );
     }
 
-    // Retrieve the bot's X token from Auth0 Token Vault
     const { token } = await auth0.getAccessTokenForConnection({
-      connection: "twitter",
+      connection: "github",
     });
 
-    const tweetId = await postAnimalToX(
+    const issue = await createAnimalIssue({
       token,
-      animal.video_url,
-      animal.x_handle,
-      animal.image_url ?? undefined
-    );
+      githubHandle: animal.github_handle,
+      imageUrl: animal.image_url ?? undefined,
+      videoUrl: animal.video_url,
+    } as { token: string; githubHandle: string; imageUrl: string; videoUrl?: string });
 
-    // Update DB
-    await updateAnimal(id, { status: "posted", tweet_id: tweetId });
+    await updateAnimal(id, { status: "posted", issue_url: issue.url });
 
-    return NextResponse.json({ tweetId });
+    return NextResponse.json({ issueUrl: issue.url });
   } catch (err) {
-    console.error("[POST /api/animals/[id]/post-to-x]", err);
-    return NextResponse.json({ error: "Failed to post to X" }, { status: 500 });
+    console.error("[POST /api/animals/[id]/post-to-github]", err);
+    return NextResponse.json({ error: "Failed to post to GitHub" }, { status: 500 });
   }
 }
