@@ -7,11 +7,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import type { Animal } from "@/lib/db";
 
-export default function WallClient({ animals: initialAnimals }: { animals: Animal[] }) {
+export default function WallClient({ animals: initialAnimals, isLoggedIn }: { animals: Animal[]; isLoggedIn: boolean }) {
   const [animals, setAnimals] = useState<Animal[]>(initialAnimals);
   const [selected, setSelected] = useState<Animal | null>(null);
 
   const closeModal = useCallback(() => setSelected(null), []);
+  const removeAnimal = useCallback((id: string) => {
+    setAnimals((current) => current.filter((a) => a.id !== id));
+    setSelected((current) => (current?.id === id ? null : current));
+  }, []);
   const updateAnimal = useCallback((updated: Animal) => {
     setAnimals((current) =>
       current.map((animal) => (animal.id === updated.id ? updated : animal))
@@ -68,6 +72,15 @@ export default function WallClient({ animals: initialAnimals }: { animals: Anima
           >
             The Wall
           </span>
+          {isLoggedIn && (
+            <Link
+              href="/settings"
+              className="text-sm hover:text-white transition-colors"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Settings
+            </Link>
+          )}
           <Link href="/draw" className="btn-primary text-sm py-2 px-5">
             Draw Yours
           </Link>
@@ -83,9 +96,12 @@ export default function WallClient({ animals: initialAnimals }: { animals: Anima
           >
             <span className="gradient-text glow-pink">THE WALL</span>
           </h1>
-          <p style={{ color: "var(--text-muted)" }}>
+          <p className="text-lg mb-4" style={{ color: "var(--text-muted)" }}>
             Every animal, immortalized forever.
           </p>
+          <Link href="/draw" className="btn-primary inline-block text-sm px-6 py-2.5">
+            Draw Your Animal
+          </Link>
           <Separator className="mt-8 opacity-20" />
         </div>
 
@@ -125,7 +141,13 @@ export default function WallClient({ animals: initialAnimals }: { animals: Anima
       </footer>
 
       {selected && (
-        <AnimalModal animal={selected} onClose={closeModal} onAnimalUpdated={updateAnimal} />
+        <AnimalModal
+          animal={selected}
+          onClose={closeModal}
+          onAnimalUpdated={updateAnimal}
+          onAnimalDeleted={removeAnimal}
+          isLoggedIn={isLoggedIn}
+        />
       )}
     </div>
   );
@@ -243,15 +265,20 @@ function AnimalModal({
   animal,
   onClose,
   onAnimalUpdated,
+  onAnimalDeleted,
+  isLoggedIn,
 }: {
   animal: Animal;
   onClose: () => void;
   onAnimalUpdated: (animal: Animal) => void;
+  onAnimalDeleted: (id: string) => void;
+  isLoggedIn: boolean;
 }) {
   const handle = animal.github_handle.startsWith("@") ? animal.github_handle : `@${animal.github_handle}`;
   const [postState, setPostState] = useState<
     { type: "idle" } | { type: "posting" } | { type: "success" } | { type: "error"; message: string }
   >({ type: "idle" });
+  const [deleteState, setDeleteState] = useState<"idle" | "confirming" | "deleting">("idle");
 
   async function handlePostToGitHub() {
     setPostState({ type: "posting" });
@@ -277,6 +304,17 @@ function AnimalModal({
         type: "error",
         message: err instanceof Error ? err.message : "Failed to post to GitHub.",
       });
+    }
+  }
+
+  async function handleDelete() {
+    if (deleteState === "idle") { setDeleteState("confirming"); return; }
+    setDeleteState("deleting");
+    try {
+      await fetch(`/api/animals/${animal.id}`, { method: "DELETE" });
+      onAnimalDeleted(animal.id);
+    } catch {
+      setDeleteState("idle");
     }
   }
 
@@ -440,11 +478,23 @@ function AnimalModal({
               </a>
             )}
           </div>
-          <div
-            className="text-sm font-semibold"
-            style={{ color: animal.status === "posted" ? "var(--neon-cyan)" : "var(--text-muted)" }}
-          >
-            {animal.status === "posted" ? "Posted to GitHub" : "Ready to share"}
+          <div className="flex flex-col items-end gap-2">
+            <div
+              className="text-sm font-semibold"
+              style={{ color: animal.status === "posted" ? "var(--neon-cyan)" : "var(--text-muted)" }}
+            >
+              {animal.status === "posted" ? "Posted to GitHub" : "Ready to share"}
+            </div>
+            {isLoggedIn && (
+              <button
+                onClick={handleDelete}
+                disabled={deleteState === "deleting"}
+                className="text-xs hover:opacity-80 transition-opacity"
+                style={{ color: deleteState === "confirming" ? "var(--hot-pink)" : "var(--text-muted)" }}
+              >
+                {deleteState === "deleting" ? "Deleting…" : deleteState === "confirming" ? "Confirm delete?" : "Delete"}
+              </button>
+            )}
           </div>
         </div>
       </div>

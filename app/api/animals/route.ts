@@ -42,7 +42,9 @@ export async function POST(request: NextRequest) {
 
     // 2. Save initial record to DB
     const animal = await createAnimal({
-      github_handle: githubHandle.startsWith('@') ? githubHandle : `@${githubHandle}`,
+      github_handle: githubHandle.startsWith('@')
+        ? githubHandle
+        : `@${githubHandle}`,
       image_url: imageBlob.url,
     })
 

@@ -61,4 +61,8 @@ export async function getAnimalById(id: string): Promise<Animal | null> {
   return (rows[0] as Animal) ?? null
 }
 
+export async function deleteAnimal(id: string): Promise<void> {
+  await sql`DELETE FROM animals WHERE id = ${id}`
+}
+
 export { sql }
