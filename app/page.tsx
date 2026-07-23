@@ -1,8 +1,18 @@
 import Link from 'next/link'
+import QRCode from 'qrcode'
 import { auth0 } from '@/lib/auth0'
+import { SITE_URL } from '@/lib/site'
 
 export default async function Home() {
-  const session = await auth0.getSession()
+  const [session, qrSvg] = await Promise.all([
+    auth0.getSession(),
+    QRCode.toString(SITE_URL, {
+      type: 'svg',
+      margin: 1,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#08080f', light: '#ffffff' },
+    }),
+  ])
 
   return (
     <div
@@ -120,6 +130,54 @@ export default async function Home() {
           </div>
         </div>
       </main>
+
+      {/* Scan to play */}
+      <section
+        className='px-6 py-16 border-t'
+        style={{ borderColor: 'var(--border)' }}
+      >
+        <div className='max-w-3xl mx-auto flex flex-col sm:flex-row items-center gap-8 sm:gap-12'>
+          {/* QR */}
+          <div
+            className='shrink-0 rounded-2xl p-3 bg-white'
+            style={{
+              boxShadow:
+                '0 0 40px rgba(255,45,120,0.35), 0 0 80px rgba(0,240,255,0.15)',
+            }}
+          >
+            <div
+              className='size-44 sm:size-52 [&>svg]:size-full [&>svg]:block'
+              dangerouslySetInnerHTML={{ __html: qrSvg }}
+            />
+          </div>
+
+          {/* Copy */}
+          <div className='text-center sm:text-left'>
+            <h2
+              className='text-4xl sm:text-5xl tracking-wide mb-3'
+              style={{ fontFamily: 'var(--font-bangers)' }}
+            >
+              <span style={{ color: 'var(--neon-cyan)' }} className='glow-cyan'>
+                SCAN TO PLAY
+              </span>
+            </h2>
+            <p
+              className='text-base sm:text-lg mb-4 leading-relaxed'
+              style={{ color: 'var(--text-muted)' }}
+            >
+              Point your phone at the code, draw your animal, and watch it hit
+              the wall before the talk is over.
+            </p>
+            <a
+              href={SITE_URL}
+              className='text-sm font-semibold break-all hover:opacity-80 transition-opacity'
+              style={{ color: 'var(--hot-pink)' }}
+            >
+              {SITE_URL.replace(/^https:\/\//, '')}
+            </a>
+          </div>
+        </div>
+      </section>
 
       {/* How it works */}
       <section className='px-6 py-20 max-w-6xl mx-auto w-full'>
