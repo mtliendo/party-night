@@ -273,6 +273,25 @@ function AnimalCard({ animal, onClick }: { animal: Animal; onClick: () => void }
   );
 }
 
+// Vercel Blob honors ?download=1 by serving the file with a
+// Content-Disposition: attachment header — the `download` attribute alone is
+// ignored on cross-origin URLs.
+function downloadUrl(url: string) {
+  return `${url}${url.includes("?") ? "&" : "?"}download=1`;
+}
+
+function DownloadLink({ url, label }: { url: string; label: string }) {
+  return (
+    <a
+      href={downloadUrl(url)}
+      className="text-center py-2.5 text-xs font-semibold tracking-widest uppercase hover:opacity-70 transition-opacity"
+      style={{ color: "var(--text-muted)", borderTop: "1px solid var(--border)" }}
+    >
+      ↓ {label}
+    </a>
+  );
+}
+
 function AnimalModal({
   animal,
   onClose,
@@ -422,6 +441,9 @@ function AnimalModal({
                 <Skeleton className="w-full h-full" />
               )}
             </div>
+            {animal.image_url && (
+              <DownloadLink url={animal.image_url} label="Download Image" />
+            )}
           </div>
 
           {/* Animated video */}
@@ -458,6 +480,9 @@ function AnimalModal({
                 </div>
               )}
             </div>
+            {animal.video_url && (
+              <DownloadLink url={animal.video_url} label="Download Video" />
+            )}
           </div>
         </div>
 
