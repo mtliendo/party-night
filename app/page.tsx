@@ -11,7 +11,7 @@ export default async function Home() {
     >
       {/* Nav */}
       <nav
-        className='flex items-center justify-between px-6 py-4 border-b'
+        className='flex flex-wrap items-center justify-between gap-y-2 px-4 sm:px-6 py-4 border-b'
         style={{ borderColor: 'var(--border)' }}
       >
         <span
@@ -74,12 +74,12 @@ export default async function Home() {
             }}
           >
             <span className='w-1.5 h-1.5 rounded-full bg-current animate-pulse' />
-            AI World Fair 2026
+            AI Hack Night NYC
           </div>
 
           {/* Headline */}
           <h1
-            className='text-7xl sm:text-8xl md:text-9xl mb-6 leading-none tracking-wide'
+            className='text-6xl sm:text-8xl md:text-9xl mb-6 leading-none tracking-wide'
             style={{ fontFamily: 'var(--font-bangers)' }}
           >
             <span className='gradient-text glow-pink'>Auth0</span>
@@ -93,10 +93,10 @@ export default async function Home() {
             className='text-lg sm:text-xl max-w-2xl mx-auto mb-12 leading-relaxed'
             style={{ color: 'var(--text-muted)' }}
           >
-            Draw your wildest creature. AI animates it into a video. Your animal
-            joins the wall — and gets posted to the{' '}
-            <span style={{ color: 'var(--hot-pink)' }}>GitHub gallery</span> by
-            an AI agent. <br />
+            Draw your wildest creature. Claude describes it, Grok animates it,
+            and your animal joins the wall — with a copy saved to{' '}
+            <span style={{ color: 'var(--hot-pink)' }}>your Box account</span>{' '}
+            by an AI agent. <br />
             <span style={{ color: 'var(--gold)' }}>Auth0 Token Vault</span>{' '}
             helps finally say goodbye to long-lived credentials in your agents!
           </p>
@@ -141,15 +141,15 @@ export default async function Home() {
             {
               step: '02',
               icon: '🤖',
-              title: 'AI Animates',
-              desc: 'Grok transforms your drawing into a short animated video.',
+              title: 'AI Takes Over',
+              desc: 'Claude describes what it sees while Grok animates your drawing into a video.',
               color: 'var(--electric-purple)',
             },
             {
               step: '03',
-              icon: '🐾',
+              icon: '📦',
               title: 'Hit the Wall',
-              desc: 'Your animal goes live on the wall and gets posted to the GitHub gallery.',
+              desc: 'Your animal goes live on the wall — and gets saved to your Box account via Token Vault.',
               color: 'var(--neon-cyan)',
             },
           ].map(({ step, icon, title, desc, color }) => (
@@ -186,7 +186,8 @@ export default async function Home() {
         Powered by{' '}
         <span style={{ color: 'var(--hot-pink)' }}>Auth0 Token Vault</span> ·{' '}
         <span style={{ color: 'var(--neon-cyan)' }}>Grok AI</span> ·{' '}
-        <span style={{ color: 'var(--electric-purple)' }}>Vercel</span>
+        <span style={{ color: 'var(--electric-purple)' }}>Claude</span> ·{' '}
+        <span style={{ color: 'var(--gold)' }}>Box</span>
       </footer>
     </div>
   )
